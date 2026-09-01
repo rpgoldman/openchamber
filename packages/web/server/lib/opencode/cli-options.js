@@ -20,6 +20,10 @@ export const parseServeCliOptions = ({
   const envTunnelToken = env.OPENCHAMBER_TUNNEL_TOKEN || undefined;
   const envTunnelHostname = env.OPENCHAMBER_TUNNEL_HOSTNAME || undefined;
   const envApiOnly = env.OPENCHAMBER_API_ONLY === '1' || env.OPENCHAMBER_API_ONLY === 'true';
+  
+  // Support for default model via environment variable
+  const envDefaultModel = env.OPENCHAMBER_DEFAULT_MODEL || undefined;
+  const envDefaultVariant = env.OPENCHAMBER_DEFAULT_VARIANT || undefined;
 
   const options = {
     port: defaultPort,
@@ -32,6 +36,9 @@ export const parseServeCliOptions = ({
     tunnelToken: envTunnelToken,
     tunnelHostname: envTunnelHostname,
     apiOnly: envApiOnly,
+    // Model selection fields
+    defaultModel: envDefaultModel,
+    defaultVariant: envDefaultVariant,
   };
 
   const consumeValue = (currentIndex, inlineValue) => {
@@ -128,6 +135,27 @@ export const parseServeCliOptions = ({
       options.tunnelProvider = cloudflareProvider;
       options.tunnelMode = managedLocalMode;
       options.tunnelConfigPath = typeof value === 'string' ? value : null;
+      continue;
+    }
+
+    // Model argument parsing
+    if (optionName === 'model' || optionName === 'm') {
+      const { value, nextIndex } = consumeValue(i, inlineValue);
+      i = nextIndex;
+      options.defaultModel = typeof value === 'string' && value.trim().length > 0 
+        ? value.trim() 
+        : undefined;
+      continue;
+    }
+
+    // Variant argument parsing (e.g., 'thinking', 'reasoning', 'xhigh')
+    if (optionName === 'variant') {
+      const { value, nextIndex } = consumeValue(i, inlineValue);
+      i = nextIndex;
+      options.defaultVariant = typeof value === 'string' && value.trim().length > 0 
+        ? value.trim() 
+        : undefined;
+      continue;
     }
   }
 
